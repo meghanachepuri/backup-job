@@ -3,7 +3,7 @@ name: Jenkins Backup
 on:
   schedule:
     # Runs every day at midnight
-    - cron: "0 0 * * *"
+    - cron: "* * * * *"
 
   # (optional) allow manual trigger too
   workflow_dispatch:
