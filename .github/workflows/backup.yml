@@ -1,0 +1,44 @@
+name: Jenkins Backup
+
+on:
+  schedule:
+    # Runs every day at midnight
+    - cron: "0 0 * * *"
+
+  # (optional) allow manual trigger too
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create Backup Directory
+        run: |
+          BACKUP_DIR=/home/runner/jenkins_backup
+          mkdir -p $BACKUP_DIR
+          echo "Backup directory created at $BACKUP_DIR"
+
+      - name: Create Jenkins Backup Archive
+        run: |
+          BACKUP_DIR=/home/runner/jenkins_backup
+          TIMESTAMP=$(date +%F_%H-%M-%S)
+          BACKUP_FILE=$BACKUP_DIR/jenkins_backup_$TIMESTAMP.tar.gz
+
+          # Example: backup files (replace with actual Jenkins path if mounted/accessible)
+          mkdir -p /tmp/jenkins/jobs
+          echo "dummy config" > /tmp/jenkins/config.xml
+          echo "dummy job" > /tmp/jenkins/jobs/job1.xml
+
+          tar -czf $BACKUP_FILE -C /tmp/jenkins jobs config.xml
+
+          # Keep only last 5 backups
+          ls -1t $BACKUP_DIR/jenkins_backup_*.tar.gz | tail -n +6 | xargs rm -f || true
+
+          echo "✅ Backup created: $BACKUP_FILE"
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jenkins-backup
+          path: /home/runner/jenkins_backup/*.tar.gz
